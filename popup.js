@@ -2,14 +2,12 @@ const PROMPT =
   "Please summarize this video transcript into bullet points " +
   "and highlight key insights and any action items:\n\n";
 
-const SERVER = "https://web-production-27cf37.up.railway.app";
-
 const btn = document.getElementById("btn");
-const status = document.getElementById("status");
+const statusEl = document.getElementById("statusEl");
 
 function setStatus(text, type = "") {
-  status.textContent = text;
-  status.className = type;
+  statusEl.textContent = text;
+  statusEl.className = type;
 }
 
 async function getCurrentTab() {
@@ -25,26 +23,19 @@ btn.addEventListener("click", async () => {
     return;
   }
 
-  const videoId = new URL(tab.url).searchParams.get("v");
-  if (!videoId) {
-    setStatus("Could not get video ID.", "error");
-    return;
-  }
-
   btn.disabled = true;
   setStatus("Loading transcript…");
 
   try {
-    const res = await fetch(SERVER + "/transcript?v=" + videoId, { signal: AbortSignal.timeout(15000) });
-    const data = await res.json();
+    const response = await chrome.tabs.sendMessage(tab.id, { action: "getTranscript" });
 
-    if (!res.ok || data.error) {
-      setStatus(data.error || "Server error " + res.status, "error");
+    if (response.error) {
+      setStatus(response.error, "error");
       btn.disabled = false;
       return;
     }
 
-    const fullText = PROMPT + data.transcript;
+    const fullText = PROMPT + response.transcript;
     await navigator.clipboard.writeText(fullText);
     chrome.tabs.create({ url: "https://claude.ai/new" });
     setStatus("Copied! Paste with Ctrl+V in Claude.", "success");

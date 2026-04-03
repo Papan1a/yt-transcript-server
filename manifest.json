@@ -5,10 +5,17 @@
   "description": "Copies YouTube transcript with a prompt and opens Claude",
   "permissions": [
     "activeTab",
+    "scripting",
     "clipboardWrite"
   ],
   "host_permissions": [
-    "https://web-production-27cf37.up.railway.app/*"
+    "https://www.youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["content.js"]
+    }
   ],
   "action": {
     "default_popup": "popup.html",
