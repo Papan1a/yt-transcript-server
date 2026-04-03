@@ -12,8 +12,8 @@ def get_transcript():
         return jsonify({"error": "Missing video ID"}), 400
 
     try:
-        # Try English first, then any available language
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+        api = YouTubeTranscriptApi()
+        transcript_list = api.list(video_id)
 
         try:
             transcript = transcript_list.find_transcript(["en"])
@@ -22,7 +22,7 @@ def get_transcript():
             transcript = next(iter(transcript_list))
 
         entries = transcript.fetch()
-        text = " ".join(entry["text"] for entry in entries)
+        text = " ".join(entry.text for entry in entries)
         text = " ".join(text.split())  # normalize whitespace
 
         return jsonify({"transcript": text, "lang": transcript.language_code})
