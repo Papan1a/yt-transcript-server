@@ -3,7 +3,7 @@ from flask_cors import CORS
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=r"chrome-extension://.*")  # Allow requests from Chrome extension only
 
 @app.route("/transcript")
 def get_transcript():
@@ -12,16 +12,18 @@ def get_transcript():
         return jsonify({"error": "Missing video ID"}), 400
 
     try:
+        # Try English first, then any available language
         transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
 
         try:
             transcript = transcript_list.find_transcript(["en"])
         except NoTranscriptFound:
+            # Fallback: use first available transcript
             transcript = next(iter(transcript_list))
 
         entries = transcript.fetch()
         text = " ".join(entry["text"] for entry in entries)
-        text = " ".join(text.split())
+        text = " ".join(text.split())  # normalize whitespace
 
         return jsonify({"transcript": text, "lang": transcript.language_code})
 
@@ -37,4 +39,5 @@ def health():
     return jsonify({"status": "ok"})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    print("YT Transcript server running on http://localhost:5000")
+    app.run(port=5000, debug=False)
