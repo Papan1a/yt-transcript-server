@@ -11,12 +11,6 @@
   "host_permissions": [
     "https://www.youtube.com/*"
   ],
-  "content_scripts": [
-    {
-      "matches": ["https://www.youtube.com/watch*"],
-      "js": ["content.js"]
-    }
-  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"

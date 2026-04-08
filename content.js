@@ -5,7 +5,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     try {
       // Inject a script into page context to read window.ytInitialPlayerResponse
       // Content scripts run in isolated world, so we use a <script> tag trick
-      const result = await new Promise((resolve) => {
+      const result = await new Promise((resolve, reject) => {
         const script = document.createElement("script");
         const callbackName = "__ytTranscript_" + Date.now();
 
@@ -30,8 +30,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           })();
         `;
 
+        const timer = setTimeout(() => {
+          window.removeEventListener("message", onMessage);
+          reject(new Error("Timeout: could not read page data. Try reloading the YouTube page."));
+        }, 5000);
+
         function onMessage(event) {
-          if (event.source !== window || !event.data || event.data.type !== callbackName) return;
+          if (!event.data || event.data.type !== callbackName) return;
+          clearTimeout(timer);
           window.removeEventListener("message", onMessage);
           resolve(event.data);
         }
